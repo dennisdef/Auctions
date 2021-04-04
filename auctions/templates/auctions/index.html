@@ -1,0 +1,38 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    {%if listings%}
+        {%if operator == "close"%}
+            <h2>Closed Listings</h2> 
+        {%else%}   
+            <h2>Active Listings</h2> 
+        {%endif%}   
+        {%for listing in listings%}
+        <div class="container-fluid mb-2 p-2 align-content-start border rounded "> 
+            <div class="row">               
+                    <div class="col col-lg-5 col-sm-12" style="text-align:center">    
+                        <a href="{% url 'listing_page' listing.id %}">
+                            <img src="{{ listing.image.url }}" style="height:200px; width:600px; object-fit: contain;"> 
+                        </a>
+                    </div>
+                    <div class="col col-lg-7 col-sm-12" style="margin-top:20px">
+                            <h5><a href="{% url 'listing_page' listing.id %}" style="color:black; text-decoration:none;">{{listing.title}}</a></h5>
+                            <div style="margin-bottom: 8px">
+                            <strong>Price:</strong> {{ listing.price }}&euro;<br>
+                            </div>                            
+                            {{listing.listing}}<br>
+                            <span class=" text-muted font-weight-normal" style="font-size:90%">
+                                Listed: {{ listing.date }}
+                                </span>
+                    </div>
+            </div>        
+        </div>
+        {%endfor%}
+    {%elif operator == "close"%}
+        <h2>No closed listings</h2>
+    {%elif operator == "watch"%}
+        <h2>No listings in watchlist</h2>
+    {%else%}
+        <h2>No active listings</h2>
+    {%endif%}
+{% endblock %}

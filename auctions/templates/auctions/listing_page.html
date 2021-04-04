@@ -1,0 +1,142 @@
+{% extends "auctions/layout.html" %}
+{% load mathfilters %}
+
+{%block body%}
+    <div class="row">        
+        <div class="col-10" style="font-size:200%">
+            <strong>{{listing.title}}</strong>
+        </div>  
+        <div class="col-2">   
+        {%if listing.active == True%}            
+            {%if user == listing.user %}
+                <form action="{% url 'close_listing' %}" method="POST"> 
+                    {% csrf_token %}
+                    <input type="hidden" name="listing" value = {{listing.id}}>
+                    <button type="submit" class="btn btn-outline-info" style="float:right">Close Listing</button>
+                </form>
+            {%elif operator %}
+                    <form action="{% url 'remove_from_watchlist' %}" method = "POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="user" value = {{user.id}}>
+                        <input type="hidden" name="listing" value = {{listing.id}}>
+                        <button type="submit" class="btn btn-outline-info" style="float:right">Remove from Watchlist</button>   
+                    </form>   
+            {%else%}    
+                    <form action="{% url 'add_to_watchlist' %}" method = "POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="user" value = {{user.id}}>
+                        <input type="hidden" name="listing" value = {{listing.id}}>
+                        <button type="submit" class="btn btn-outline-info" style="float:right">Add to Watchlist</button>   
+                    </form> 
+            {%endif%}        
+        {%endif%}
+        </div>        
+    </div>
+
+    <div class="row">
+        <div class = "col-9">
+            <img src="{{ listing.image.url }}"  style="width:auto; height:auto; max-height:60vh; max-width:70vw;">
+        </div>
+    </div>
+
+    <div style="margin-top:20px">
+        {{listing.listing}}
+    </div>
+    <div style="font-size:150%; font-weight: 600;">
+        {{listing.price}}&euro;
+    </div>
+
+        {%if listing.active == False %}
+                    {%if highest_bid.name == user%}
+                        <h5>Congratulations. You are the winner of this auction!</h5>
+                    {%else%}
+                        <h5> The winner of the auction is {{highest_bid.name}}</h5>
+                    {%endif%}
+       
+        {%else%}
+                <div>
+                    There are {{ bids.count|sub:1 }} bid(s) so far.
+                    {%if highest_bid.name == user and user != listing.user %}
+                        You are the highest bidder.
+                    {%endif%}
+                </div>
+
+                <div>
+                    {%if user == listing.user %}
+                    <div class="alert alert-warning" role="alert">
+                        You are the listing's owner. You can't bid on it
+                    </div>
+                    {%else%}
+                        <form action="{% url 'place_bid' listing.id %}" method="POST">
+                            {% csrf_token %}
+                            <input tyle="text" class="form-control .col-3" name="bid" placeholder="Bid" rows="1">
+                            <input type="hidden" name="bider" value="{{user.username}}">
+                            <button type="submit" class="btn btn-primary  btn-lg mt-2" >Place Bid</button>
+                        </form>
+                        {% if messages %}  
+                            {% for message in messages %}
+                                {% if message.level_tag == "error" %}    
+                                    <div class="alert alert-warning" role="alert">
+                                        {{ message }}
+                                    </div>      
+                                {% elif message.level_tag == "success" %}
+                                    <div class="alert alert-success" role="alert">
+                                        {{ message }}
+                                    </div>      
+                                {% endif %}
+                            {% endfor %}
+                        {%endif%}
+                    {%endif%}
+                </div>
+        {%endif%}
+
+    <hr>
+    <h4>Details</h4>
+    <ul>
+        <li>Listed by <strong>{{listing.user}}</strong></li>
+        <li>Category: <strong>{{listing.category}}</strong></li>
+
+    </ul>
+
+    <hr>
+    <h4>Comments:</h4>
+    <div class="row">
+        <div class="container"> 
+            <div class="col-8 card mb-4  mt-3 ">
+                <div class="card-body">
+                    <h3>{{ comments.count }} comments</h3>
+                    {% for comment in comments %}
+                        <div class="comments" style="padding: 10px;">
+                            <p class="font-weight-bold">
+                                {{ comment.name }}
+                                <span class=" text-muted font-weight-normal">
+                                {{ comment.created_on }}
+                                </span>
+                            </p>
+                            {{ comment.comment | linebreaks }}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if user.is_authenticated %}
+    <div class="row">
+        <div class="container"> 
+            <div class="col-8 card mb-4  mt-3 ">
+                <div class="card-body">
+                    <h3>Leave a comment</h3>
+                    <form method="post" style="margin-top: 1.3em;">
+                        {{ comment_form.as_p }}
+                        {% csrf_token %}
+                        <input type="hidden" name="owner" value="{{user.username}}">
+                        <button type="submit" class="btn btn-primary  btn-lg">Submit</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {%else%}
+    <h3><a href="{% url 'login' %}" style="color:black; text-decoration:none;">Login to leave a comment</a></h3>
+    {%endif%}
+{%endblock%}
